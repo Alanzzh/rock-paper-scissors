@@ -1,0 +1,291 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Microsoft YaHei', sans-serif;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #333;
+}
+
+.screen {
+  width: 100%;
+  max-width: 600px;
+  padding: 20px;
+}
+
+.hidden {
+  display: none !important;
+}
+
+.container {
+  background: white;
+  border-radius: 20px;
+  padding: 40px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+}
+
+/* 加入界面 */
+#joinScreen h1 {
+  text-align: center;
+  font-size: 2.5em;
+  margin-bottom: 30px;
+  color: #667eea;
+}
+
+#joinScreen input {
+  width: 100%;
+  padding: 15px;
+  margin-bottom: 15px;
+  border: 2px solid #e0e0e0;
+  border-radius: 10px;
+  font-size: 16px;
+  transition: border-color 0.3s;
+}
+
+#joinScreen input:focus {
+  outline: none;
+  border-color: #667eea;
+}
+
+#joinScreen button {
+  width: 100%;
+  padding: 15px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-size: 18px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+
+#joinScreen button:hover {
+  transform: translateY(-2px);
+}
+
+#joinScreen button:active {
+  transform: translateY(0);
+}
+
+/* 游戏界面 */
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding-bottom: 15px;
+  border-bottom: 2px solid #f0f0f0;
+}
+
+.header h2 {
+  color: #667eea;
+  font-size: 1.5em;
+}
+
+.small-btn {
+  padding: 8px 15px;
+  background: #667eea;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background 0.3s;
+}
+
+.small-btn:hover {
+  background: #5568d3;
+}
+
+/* 玩家列表 */
+.player-list {
+  margin-bottom: 20px;
+}
+
+.player-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px;
+  margin-bottom: 10px;
+  background: #f8f9fa;
+  border-radius: 10px;
+  border-left: 4px solid #e0e0e0;
+}
+
+.player-card.me {
+  background: #e8eaf6;
+  border-left-color: #667eea;
+}
+
+.player-name {
+  font-weight: bold;
+  font-size: 16px;
+}
+
+.player-status {
+  font-size: 14px;
+  color: #666;
+}
+
+.player-score {
+  font-size: 14px;
+  color: #667eea;
+  font-weight: bold;
+}
+
+/* 状态文本 */
+.status {
+  text-align: center;
+  font-size: 18px;
+  color: #667eea;
+  font-weight: bold;
+  margin: 20px 0;
+  min-height: 30px;
+}
+
+/* 倒计时 */
+.countdown {
+  text-align: center;
+  font-size: 80px;
+  font-weight: bold;
+  color: #667eea;
+  margin: 20px 0;
+  animation: pulse 1s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+}
+
+/* 选择按钮 */
+.choices {
+  display: flex;
+  justify-content: space-around;
+  gap: 15px;
+  margin: 30px 0;
+}
+
+.choice-btn {
+  flex: 1;
+  padding: 30px 20px;
+  background: white;
+  border: 3px solid #667eea;
+  border-radius: 15px;
+  font-size: 18px;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.choice-btn:hover {
+  background: #667eea;
+  color: white;
+  transform: translateY(-5px);
+  box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+}
+
+.choice-btn:active {
+  transform: translateY(-2px);
+}
+
+/* 准备按钮 */
+.ready-btn {
+  width: 100%;
+  padding: 20px;
+  background: #4caf50;
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-size: 20px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.ready-btn:hover {
+  background: #45a049;
+  transform: translateY(-2px);
+}
+
+.ready-btn.active {
+  background: #f44336;
+}
+
+.ready-btn.active:hover {
+  background: #da190b;
+}
+
+/* 结果显示 */
+.result {
+  text-align: center;
+  padding: 20px;
+  background: #f8f9fa;
+  border-radius: 15px;
+  margin-top: 20px;
+}
+
+.result h2 {
+  color: #667eea;
+  margin-bottom: 20px;
+}
+
+.result-grid {
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+}
+
+.result-item {
+  padding: 15px;
+  background: white;
+  border-radius: 10px;
+  min-width: 120px;
+}
+
+.result-choice {
+  font-size: 50px;
+  margin: 10px 0;
+}
+
+.result-text {
+  font-size: 24px;
+  font-weight: bold;
+  color: #667eea;
+  margin-top: 20px;
+}
+
+/* 响应式设计 */
+@media (max-width: 600px) {
+  .container {
+    padding: 20px;
+  }
+
+  .choices {
+    flex-direction: column;
+  }
+
+  .choice-btn {
+    padding: 20px;
+  }
+
+  .countdown {
+    font-size: 60px;
+  }
+
+  .player-card {
+    flex-direction: column;
+    gap: 8px;
+    text-align: center;
+  }
+}

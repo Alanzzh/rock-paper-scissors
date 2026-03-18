@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>石头剪刀布 Online</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div id="app">
+    <!-- 加入房间界面 -->
+    <div id="joinScreen" class="screen">
+      <div class="container">
+        <h1>🪨📄✂️ 石头剪刀布</h1>
+        <input type="text" id="playerName" placeholder="输入你的昵称" maxlength="20">
+        <input type="text" id="roomId" placeholder="房间号（留空自动创建）" maxlength="10">
+        <button id="joinBtn">加入游戏</button>
+      </div>
+    </div>
+
+    <!-- 游戏界面 -->
+    <div id="gameScreen" class="screen hidden">
+      <div class="container">
+        <div class="header">
+          <h2>房间: <span id="currentRoom"></span></h2>
+          <button id="copyRoomBtn" class="small-btn">复制房间号</button>
+        </div>
+
+        <!-- 玩家列表 -->
+        <div id="playerList" class="player-list"></div>
+
+        <!-- 游戏状态 -->
+        <div id="gameStatus" class="status"></div>
+
+        <!-- 倒计时 -->
+        <div id="countdown" class="countdown hidden"></div>
+
+        <!-- 选择按钮 -->
+        <div id="choiceButtons" class="choices hidden">
+          <button class="choice-btn" data-choice="rock">🪨<br>石头</button>
+          <button class="choice-btn" data-choice="paper">📄<br>布</button>
+          <button class="choice-btn" data-choice="scissors">✂️<br>剪刀</button>
+        </div>
+
+        <!-- 准备按钮 -->
+        <button id="readyBtn" class="ready-btn">准备</button>
+
+        <!-- 结果显示 -->
+        <div id="resultDisplay" class="result hidden"></div>
+      </div>
+    </div>
+  </div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    const socket = io();
+    let currentRoomId = null;
+    let playerId = null;
+    let playerName = null;
+    let myChoice = null;
+    let mySalt = null;
+    let gameState = 'WAITING';
+
+    // DOM 元素
+    const joinScreen = document.getElementById('joinScreen');
+    const gameScreen = document.getElementById('gameScreen');
+    const playerNameInput = document.getElementById('playerName');
+    const roomIdInput = document.getElementById('roomId');
+    const joinBtn = document.getElementById('joinBtn');
+    const currentRoomSpan = document.getElementById('currentRoom');
+    const copyRoomBtn = document.getElementById('copyRoomBtn');
+    const playerList = document.getElementById('playerList');
+    const gameStatus = document.getElementById('gameStatus');
+    const countdown = document.getElementById('countdown');
+    const choiceButtons = document.getElementById('choiceButtons');
+    const readyBtn = document.getElementById('readyBtn');
+    const resultDisplay = document.getElementById('resultDisplay');
+
+    // 加入房间
+    joinBtn.addEventListener('click', () => {
+      playerName = playerNameInput.value.trim() || '玩家' + Math.floor(Math.random() * 1000);
+      currentRoomId = roomIdInput.value.trim() || generateRoomId();
+
+      socket.emit('joinRoom', { roomId: currentRoomId, playerName });
+    });
+
+    // 生成随机房间号
+    function generateRoomId() {
+      return Math.random().toString(36).substring(2, 8).toUpperCase();
+    }
+
+    // 加入成功
+    socket.on('joined', (data) => {
+      playerId = data.playerId;
+      currentRoomSpan.textContent = data.roomId;
+      joinScreen.classList.add('hidden');
+      gameScreen.classList.remove('hidden');
+      updateStatus('等待玩家准备...');
+    });
+
+    // 复制房间号
+    copyRoomBtn.addEventListener('click', () => {
+      navigator.clipboard.writeText(currentRoomId);
+      copyRoomBtn.textContent = '已复制!';
+      setTimeout(() => {
+        copyRoomBtn.textContent = '复制房间号';
+      }, 2000);
+    });
+
+    // 更新玩家列表
+    socket.on('playerUpdate', (players) => {
+      playerList.innerHTML = players.map(p => `
+        <div class="player-card ${p.id === playerId ? 'me' : ''}">
+          <span class="player-name">${p.name}</span>
+          <span class="player-status">
+            ${p.ready ? '✅ 已准备' : '⏳ 等待中'}
+            ${p.committed ? ' | 已出拳' : ''}
+          </span>
+          <span class="player-score">分数: ${p.score}</span>
+        </div>
+      `).join('');
+    });
+
+    // 准备按钮
+    readyBtn.addEventListener('click', () => {
+      const isReady = readyBtn.classList.toggle('active');
+      socket.emit('setReady', { roomId: currentRoomId, ready: isReady });
+      readyBtn.textContent = isReady ? '取消准备' : '准备';
+    });
+
+    // 开始出拳阶段
+    socket.on('startCommit', (data) => {
+      gameState = 'COMMIT';
+      readyBtn.classList.add('hidden');
+      choiceButtons.classList.remove('hidden');
+      updateStatus('快速出拳！');
+      startCountdown(data.countdown);
+    });
+
+    // 倒计时
+    function startCountdown(seconds) {
+      countdown.classList.remove('hidden');
+      let remaining = seconds;
+      countdown.textContent = remaining;
+
+      const timer = setInterval(() => {
+        remaining--;
+        if (remaining > 0) {
+          countdown.textContent = remaining;
+        } else {
+          clearInterval(timer);
+          countdown.classList.add('hidden');
+        }
+      }, 1000);
+    }
+
+    // 选择出拳
+    document.querySelectorAll('.choice-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        if (gameState !== 'COMMIT') return;
+
+        myChoice = btn.dataset.choice;
+        mySalt = generateSalt();
+        const hash = sha256(myChoice + mySalt);
+
+        socket.emit('commit', { roomId: currentRoomId, hash });
+
+        choiceButtons.classList.add('hidden');
+        updateStatus('已提交，等待其他玩家...');
+      });
+    });
+
+    // 开始揭示阶段
+    socket.on('startReveal', () => {
+      gameState = 'REVEAL';
+      updateStatus('揭晓中...');
+      socket.emit('reveal', {
+        roomId: currentRoomId,
+        choice: myChoice,
+        salt: mySalt
+      });
+    });
+
+    // 显示结果
+    socket.on('showResult', (data) => {
+      gameState = 'RESULT';
+      const choiceEmoji = { rock: '🪨', paper: '📄', scissors: '✂️' };
+
+      let resultHTML = '<h2>结果</h2><div class="result-grid">';
+      data.results.forEach(r => {
+        resultHTML += `
+          <div class="result-item">
+            <div>${r.name}</div>
+            <div class="result-choice">${choiceEmoji[r.choice]}</div>
+          </div>
+        `;
+      });
+      resultHTML += '</div>';
+
+      if (data.type === 'DRAW') {
+        resultHTML += '<div class="result-text">平局！</div>';
+      } else if (data.type === 'WIN') {
+        resultHTML += `<div class="result-text">🎉 ${choiceEmoji[data.winner]} 获胜！</div>`;
+      }
+
+      resultDisplay.innerHTML = resultHTML;
+      resultDisplay.classList.remove('hidden');
+      updateStatus('');
+    });
+
+    // 重置回合
+    socket.on('roundReset', () => {
+      gameState = 'WAITING';
+      myChoice = null;
+      mySalt = null;
+      resultDisplay.classList.add('hidden');
+      choiceButtons.classList.add('hidden');
+      readyBtn.classList.remove('hidden', 'active');
+      readyBtn.textContent = '准备';
+      updateStatus('等待玩家准备...');
+    });
+
+    // 更新状态文本
+    function updateStatus(text) {
+      gameStatus.textContent = text;
+    }
+
+    // 生成随机盐值
+    function generateSalt() {
+      return Math.random().toString(36).substring(2, 15);
+    }
+
+    // 简单的 SHA256 实现（生产环境建议用 crypto-js）
+    async function sha256(message) {
+      const msgBuffer = new TextEncoder().encode(message);
+      const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+      const hashArray = Array.from(new Uint8Array(hashBuffer));
+      return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+    }
+  </script>
+</body>
+</html>
