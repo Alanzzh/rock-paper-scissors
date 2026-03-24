@@ -134,7 +134,7 @@
       readyBtn.classList.add('hidden');
       choiceButtons.classList.remove('hidden');
       updateStatus('快速出拳！');
-      startCountdown(data.countdown);
+      startCountdown(data.countdownn);
     });
 
     // 倒计时
@@ -185,22 +185,26 @@
     socket.on('showResult', (data) => {
       gameState = 'RESULT';
       const choiceEmoji = { rock: '🪨', paper: '📄', scissors: '✂️' };
+      const choiceName = { rock: '石头', paper: '布', scissors: '剪刀' };
 
       let resultHTML = '<h2>结果</h2><div class="result-grid">';
       data.results.forEach(r => {
+        const isWinner = data.type === 'WIN' && r.choice === data.winner;
         resultHTML += `
-          <div class="result-item">
-            <div>${r.name}</div>
-            <div class="result-choice">${choiceEmoji[r.choice]}</div>
+          <div class="result-item ${isWinner ? 'winner' : ''}">
+            <div class="result-name">${r.name}</div>
+            <div class="result-choice-big">${choiceEmoji[r.choice]}</div>
+            <div class="result-choice-text">${choiceName[r.choice]}</div>
+            ${isWinner ? '<div class="winner-badge">🏆 胜利</div>' : ''}
           </div>
         `;
       });
       resultHTML += '</div>';
 
       if (data.type === 'DRAW') {
-        resultHTML += '<div class="result-text">平局！</div>';
+        resultHTML += '<div class="result-text">🤝 平局！</div>';
       } else if (data.type === 'WIN') {
-        resultHTML += `<div class="result-text">🎉 ${choiceEmoji[data.winner]} 获胜！</div>`;
+        resultHTML += `<div class="result-text">🎉 ${choiceEmoji[data.winner]} ${choiceName[data.winner]} 获胜！</div>`;
       }
 
       resultDisplay.innerHTML = resultHTML;

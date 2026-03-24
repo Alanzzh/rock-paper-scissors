@@ -247,10 +247,55 @@ body {
 }
 
 .result-item {
-  padding: 15px;
+  padding: 20px;
   background: white;
-  border-radius: 10px;
-  min-width: 120px;
+  border-radius: 15px;
+  min-width: 140px;
+  border: 3px solid #e0e0e0;
+  transition: all 0.3s;
+}
+
+.result-item.winner {
+  border-color: #ffd700;
+  background: linear-gradient(135deg, #fff9e6 0%, #fffbf0 100%);
+  box-shadow: 0 5px 20px rgba(255, 215, 0, 0.4);
+  transform: scale(1.05);
+}
+
+.result-name {
+  font-weight: bold;
+  font-size: 16px;
+  margin-bottom: 10px;
+  color: #333;
+}
+
+.result-choice-big {
+  font-size: 80px;
+  margin: 15px 0;
+}
+
+.result-choice-text {
+  font-size: 18px;
+  color: #667eea;
+  font-weight: bold;
+  margin-bottom: 10px;
+}
+
+.winner-badge {
+  background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
+  color: #333;
+  padding: 8px 15px;
+  border-radius: 20px;
+  font-size: 14px;
+  font-weight: bold;
+  margin-top: 10px;
+  display: inline-block;
+  animation: bounce 0.6s ease;
+}
+
+@keyframes bounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
 }
 
 .result-choice {
