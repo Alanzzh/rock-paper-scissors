@@ -156,12 +156,12 @@
 
     // 选择出拳
     document.querySelectorAll('.choice-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
+      btn.addEventListener('click', async () => {
         if (gameState !== 'COMMIT') return;
 
         myChoice = btn.dataset.choice;
         mySalt = generateSalt();
-        const hash = sha256(myChoice + mySalt);
+        const hash = await sha256(myChoice + mySalt);
 
         socket.emit('commit', { roomId: currentRoomId, hash });
 
