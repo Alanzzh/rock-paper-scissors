@@ -1,13 +1,60 @@
+require('dotenv').config();
 const express = require('express');
 const http = require('http');
 const socketIO = require('socket.io');
 const crypto = require('crypto');
+const session = require('express-session');
+const passport = require('passport');
+const GoogleStrategy = require('passport-google-oauth20').Strategy;
 
 const app = express();
 const server = http.createServer(app);
 const io = socketIO(server);
 
+// Session 配置
+app.use(session({
+  secret: process.env.SESSION_SECRET || 'rock-paper-scissors-secret',
+  resave: false,
+  saveUninitialized: false
+}));
+
+app.use(passport.initialize());
+app.use(passport.session());
 app.use(express.static('public'));
+
+// Passport 序列化
+passport.serializeUser((user, done) => done(null, user));
+passport.deserializeUser((user, done) => done(null, user));
+
+// Google OAuth 配置
+passport.use(new GoogleStrategy({
+  clientID: process.env.GOOGLE_CLIENT_ID,
+  clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+  callbackURL: process.env.CALLBACK_URL || 'http://localhost:3000/auth/google/callback'
+}, (accessToken, refreshToken, profile, done) => {
+  return done(null, {
+    id: profile.id,
+    name: profile.displayName,
+    email: profile.emails[0].value,
+    avatar: profile.photos[0].value
+  });
+}));
+
+// OAuth 路由
+app.get('/auth/google', passport.authenticate('google', { scope: ['profile', 'email'] }));
+
+app.get('/auth/google/callback',
+  passport.authenticate('google', { failureRedirect: '/' }),
+  (req, res) => res.redirect('/')
+);
+
+app.get('/auth/user', (req, res) => {
+  res.json(req.user || null);
+});
+
+app.get('/auth/logout', (req, res) => {
+  req.logout(() => res.redirect('/'));
+});
 
 // 房间数据结构
 const rooms = new Map();
