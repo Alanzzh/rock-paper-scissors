@@ -26,19 +26,21 @@ app.use(express.static('public'));
 passport.serializeUser((user, done) => done(null, user));
 passport.deserializeUser((user, done) => done(null, user));
 
-// Google OAuth 配置
-passport.use(new GoogleStrategy({
-  clientID: process.env.GOOGLE_CLIENT_ID,
-  clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-  callbackURL: process.env.CALLBACK_URL || 'http://localhost:3000/auth/google/callback'
-}, (accessToken, refreshToken, profile, done) => {
-  return done(null, {
-    id: profile.id,
-    name: profile.displayName,
-    email: profile.emails[0].value,
-    avatar: profile.photos[0].value
-  });
-}));
+// Google OAuth 配置（仅在配置了凭据时启用）
+if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
+  passport.use(new GoogleStrategy({
+    clientID: process.env.GOOGLE_CLIENT_ID,
+    clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+    callbackURL: process.env.CALLBACK_URL || 'http://localhost:3000/auth/google/callback'
+  }, (accessToken, refreshToken, profile, done) => {
+    return done(null, {
+      id: profile.id,
+      name: profile.displayName,
+      email: profile.emails[0].value,
+      avatar: profile.photos[0].value
+    });
+  }));
+}
 
 // OAuth 路由
 app.get('/auth/google', passport.authenticate('google', { scope: ['profile', 'email'] }));
